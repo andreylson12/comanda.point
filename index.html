@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Point Beer - Comandas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    header {
+      background: #111827;
+      padding: 10px 16px;
+      border-bottom: 2px solid #facc15;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: #facc15;
+    }
+
+    header span {
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    main {
+      display: flex;
+      min-height: calc(100vh - 60px);
+    }
+
+    /* Coluna de mesas */
+    .mesas {
+      width: 30%;
+      max-width: 260px;
+      border-right: 1px solid #374151;
+      padding: 10px;
+      background: #020617;
+    }
+
+    .mesas h2 {
+      font-size: 1rem;
+      margin-top: 0;
+      margin-bottom: 8px;
+    }
+
+    .lista-mesas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn-mesa {
+      position: relative;
+      flex: 1 1 45%;
+      border: 1px solid #1f2937;
+      padding: 8px;
+      border-radius: 8px;
+      background: #1f2937;
+      color: #e5e7eb;
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    .btn-mesa.ativa {
+      background: #facc15;
+      color: #111827;
+      font-weight: bold;
+      border-color: #facc15;
+    }
+
+    /* Mesas ocupadas (tem itens na comanda) */
+    .btn-mesa.ocupada {
+      border: 2px solid #22c55e;
+    }
+
+    .btn-mesa.ocupada::after {
+      content: "●";
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      font-size: 0.7rem;
+      color: #22c55e;
+    }
+
+    /* Área da direita (comandas/relatório) */
+    .comanda {
+      flex: 1;
+      padding: 10px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #374151;
+      padding-bottom: 4px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: #1f2937;
+      color: #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .tab-btn.ativa {
+      background: #facc15;
+      color: #111827;
+      font-weight: bold;
+    }
+
+    .comanda-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .comanda-header h2 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .tag-mesa {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #1f2937;
+      border: 1px solid #4b5563;
+      font-size: 0.8rem;
+    }
+
+    .produtos {
+      margin-bottom: 8px;
+      padding: 8px;
+      border-radius: 8px;
+      background: #020617;
+      border: 1px solid #374151;
+    }
+
+    .linha-produto {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    select, input[type="number"] {
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #e5e7eb;
+      min-width: 120px;
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .btn-adicionar {
+      background: #22c55e;
+      color: #022c22;
+      font-weight: bold;
+    }
+
+    .btn-adicionar:active {
+      transform: scale(0.98);
+    }
+
+    .btn-pequeno {
+      padding: 3px 6px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      margin: 0 2px;
+    }
+
+    .btn-mais {
+      background: #22c55e;
+      color: #022c22;
+    }
+
+    .btn-menos {
+      background: #f97316;
+      color: #171717;
+    }
+
+    .btn-remover {
+      background: #ef4444;
+      color: #fee2e2;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+
+    th, td {
+      border-bottom: 1px solid #1f2937;
+      padding: 6px 4px;
+      text-align: center;
+    }
+
+    th {
+      background: #020617;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .tabela-container {
+      max-height: 280px;
+      overflow-y: auto;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+      background: #020617;
+      margin-bottom: 8px;
+    }
+
+    .total-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .total-container span {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .pagamento {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .pagamento input {
+      max-width: 140px;
+    }
+
+    .btn-fechar {
+      background: #facc15;
+      color: #111827;
+      font-weight: bold;
+    }
+
+    .btn-limpar {
+      background: #6b7280;
+      color: #e5e7eb;
+    }
+
+    .info-pequena {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
+    .resumo-geral {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .card-resumo {
+      flex: 1 1 160px;
+      background: #020617;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 0.85rem;
+    }
+
+    .card-resumo span {
+      display: block;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .card-resumo strong {
+      font-size: 1rem;
+    }
+
+    h3 {
+      margin: 8px 0 4px 0;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        flex-direction: column;
+      }
+      .mesas {
+        width: 100%;
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid #374151;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Point Beer - Comandas</h1>
+    <span>Sistema interno simples para controle de mesas</span>
+  </header>
+
+  <main>
+    <!-- COLUNA DE MESAS -->
+    <section class="mesas">
+      <h2>Mesas / Comandas</h2>
+      <div class="lista-mesas" id="listaMesas"></div>
+      <p class="info-pequena">
+        Toque na mesa para abrir ou trocar de comanda.<br>
+        Mesas com bolinha verde estão em uso. O valor aparece ao lado do nome.
+      </p>
+    </section>
+
+    <!-- ÁREA DA DIREITA: COMANDAS / RELATÓRIO -->
+    <section class="comanda">
+      <div class="tabs">
+        <button id="tabComanda" class="tab-btn ativa" onclick="mostrarAba('comanda')">Comandas</button>
+        <button id="tabRelatorio" class="tab-btn" onclick="mostrarAba('relatorio')">Relatório</button>
+      </div>
+
+      <!-- ABA COMANDAS -->
+      <div id="abaComanda">
+        <div class="comanda-header">
+          <h2>Comanda Atual</h2>
+          <div class="tag-mesa" id="tagMesaAtual">Nenhuma mesa selecionada</div>
+        </div>
+
+        <!-- LANÇAMENTO DE PRODUTOS -->
+        <div class="produtos">
+          <div class="linha-produto">
+            <select id="produtoSelect">
+              <!-- AQUI VOCÊ PODE ALTERAR / ADAPTAR OS PRODUTOS -->
+              <optgroup label="Cervejas">
+                <option value="Cerveja Lata 269ml" data-preco="4.00">Cerveja Lata 269ml - R$ 4,00</option>
+                <option value="Cerveja Lata 350ml" data-preco="5.00">Cerveja Lata 350ml - R$ 5,00</option>
+                <option value="Cerveja Long Neck" data-preco="7.00">Cerveja Long Neck - R$ 7,00</option>
+              </optgroup>
+              <optgroup label="Refrigerantes / Água">
+                <option value="Refrigerante Lata" data-preco="5.00">Refrigerante Lata - R$ 5,00</option>
+                <option value="Água 500ml" data-preco="3.00">Água 500ml - R$ 3,00</option>
+              </optgroup>
+              <optgroup label="Outros">
+                <option value="Dose Destilado" data-preco="8.00">Dose de Destilado - R$ 8,00</option>
+                <option value="Gelo Pacote" data-preco="10.00">Gelo Pacote - R$ 10,00</option>
+              </optgroup>
+            </select>
+
+            <input type="number" id="qtdInput" min="1" value="1" />
+            <button class="btn btn-adicionar" onclick="adicionarItem()">Adicionar</button>
+          </div>
+          <p class="info-pequena">
+            Você pode editar os produtos acima (nome e preço) conforme seu estoque do Point Beer.
+          </p>
+        </div>
+
+        <!-- TABELA DE ITENS -->
+        <div class="tabela-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Qtd</th>
+                <th>Preço</th>
+                <th>Subtotal</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyItens">
+              <!-- Itens da comanda aparecem aqui -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TOTAL E PAGAMENTO -->
+        <div class="total-container">
+          <span>Total: <span id="totalComanda">R$ 0,00</span></span>
+          <span id="infoTroco" class="info-pequena"></span>
+        </div>
+
+        <div class="pagamento">
+          <input type="number" id="valorRecebido" placeholder="Valor recebido" step="0.01" />
+          <select id="formaPagamento">
+            <option value="">Forma de pagamento</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="PIX">PIX</option>
+            <option value="Cartão Débito">Cartão Débito</option>
+            <option value="Cartão Crédito">Cartão Crédito</option>
+          </select>
+          <button class="btn btn-fechar" onclick="fecharConta()">Fechar Conta</button>
+          <button class="btn btn-limpar" onclick="limparComanda()">Limpar Comanda</button>
+        </div>
+
+        <p class="info-pequena">
+          Ao fechar conta, o sistema registra a venda no histórico (com forma de pagamento) e você pode ver tudo na aba Relatório.
+        </p>
+      </div>
+
+      <!-- ABA RELATÓRIO -->
+      <div id="abaRelatorio" style="display: none;">
+        <div class="comanda-header">
+          <h2>Relatório de Vendas</h2>
+        </div>
+        <p class="info-pequena">
+          As vendas fechadas ficam salvas neste aparelho. Use esta aba para acompanhar o movimento do Point Beer.
+        </p>
+
+        <div class="resumo-geral">
+          <div class="card-resumo">
+            <span>Total vendido</span>
+            <strong id="relTotalVendido">R$ 0,00</strong>
+          </div>
+          <div class="card-resumo">
+            <span>Comandas fechadas</span>
+            <strong id="relQtdVendas">0</strong>
+          </div>
+        </div>
+
+        <h3>Resumo por mesa</h3>
+        <div class="tabela-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Mesa</th>
+                <th>Total vendido</th>
+              </tr>
+            </thead>
+            <tbody id="relPorMesa">
+              <!-- Linhas por mesa -->
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Resumo por produto</h3>
+        <div class="tabela-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="relPorProduto">
+              <!-- Linhas por produto -->
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Lista de vendas</h3>
+        <div class="tabela-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Data/Hora</th>
+                <th>Mesa</th>
+                <th>Total</th>
+                <th>Pagamento</th>
+                <th>Itens</th>
+              </tr>
+            </thead>
+            <tbody id="relListaVendas">
+              <!-- Vendas individuais -->
+            </tbody>
+          </table>
+        </div>
+
+        <button class="btn btn-limpar" onclick="limparHistorico()">Limpar histórico de vendas</button>
+        <p class="info-pequena">
+          Use o botão acima com cuidado. Ele apaga apenas o histórico (as comandas em aberto continuam).
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ==========================
+    // CONFIGURAÇÃO DE MESAS
+    // ==========================
+    const mesas = [
+      "Mesa 1",
+      "Mesa 2",
+      "Mesa 3",
+      "Mesa 4",
+      "Mesa 5",
+      "Mesa 6",
+      "Mesa 7",
+      "Mesa 8",
+      "Mesa 9",
+      "Mesa 10",
+      "Balcão 1",
+      "Balcão 2"
+    ];
+
+    let mesaAtual = null;
+    let comandas = {}; // { idMesa: [ { produto, preco, quantidade } ] }
+
+    const STORAGE_KEY = "comandasPointBeer";
+    const STORAGE_HIST_KEY = "comandasPointBeerHistorico";
+
+    let historicoVendas = []; // [{ mesa, itens, total, recebido, troco, formaPagamento, dataHora }]
+
+    // --------------------------
+    // UTILITÁRIOS
+    // --------------------------
+    function formatarValor(v) {
+      return "R$ " + v.toFixed(2).replace(".", ",");
+    }
+
+    // Atualiza visual das mesas: ocupada + total no botão
+    function atualizarEstadoMesas() {
+      mesas.forEach((nomeMesa, i) => {
+        const btn = document.getElementById("mesaBtn-" + i);
+        if (!btn) return;
+
+        const itens = comandas[i] || [];
+        let totalMesa = 0;
+        itens.forEach((item) => {
+          totalMesa += item.preco * item.quantidade;
+        });
+
+        if (totalMesa > 0) {
+          btn.textContent = `${nomeMesa} - ${formatarValor(totalMesa)}`;
+          btn.classList.add("ocupada");
+        } else {
+          btn.textContent = nomeMesa;
+          btn.classList.remove("ocupada");
+        }
+      });
+    }
+
+    // --------------------------
+    // LOCALSTORAGE
+    // --------------------------
+    function carregarEstado() {
+      try {
+        const salvo = localStorage.getItem(STORAGE_KEY);
+        if (salvo) {
+          comandas = JSON.parse(salvo);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar estado:", e);
+      }
+
+      try {
+        const hist = localStorage.getItem(STORAGE_HIST_KEY);
+        if (hist) {
+          historicoVendas = JSON.parse(hist);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar histórico:", e);
+      }
+    }
+
+    function salvarEstado() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(comandas));
+      } catch (e) {
+        console.error("Erro ao salvar estado:", e);
+      }
+      atualizarEstadoMesas();
+    }
+
+    function salvarHistorico() {
+      try {
+        localStorage.setItem(STORAGE_HIST_KEY, JSON.stringify(historicoVendas));
+      } catch (e) {
+        console.error("Erro ao salvar histórico:", e);
+      }
+    }
+
+    // --------------------------
+    // ABA / TABS
+    // --------------------------
+    function mostrarAba(qual) {
+      const abaComanda = document.getElementById("abaComanda");
+      const abaRelatorio = document.getElementById("abaRelatorio");
+      const tabComanda = document.getElementById("tabComanda");
+      const tabRelatorio = document.getElementById("tabRelatorio");
+
+      if (qual === "comanda") {
+        abaComanda.style.display = "block";
+        abaRelatorio.style.display = "none";
+        tabComanda.classList.add("ativa");
+        tabRelatorio.classList.remove("ativa");
+      } else {
+        abaComanda.style.display = "none";
+        abaRelatorio.style.display = "block";
+        tabComanda.classList.remove("ativa");
+        tabRelatorio.classList.add("ativa");
+        atualizarRelatorio();
+      }
+    }
+
+    // --------------------------
+    // MESAS
+    // --------------------------
+    function montarListaMesas() {
+      const lista = document.getElementById("listaMesas");
+      lista.innerHTML = "";
+      mesas.forEach((nome, index) => {
+        const btn = document.createElement("button");
+        btn.className = "btn-mesa";
+        btn.textContent = nome;
+        btn.onclick = () => selecionarMesa(index);
+        btn.id = "mesaBtn-" + index;
+        lista.appendChild(btn);
+      });
+      atualizarEstadoMesas();
+    }
+
+    function selecionarMesa(indiceMesa) {
+      mesaAtual = indiceMesa;
+      document.getElementById("tagMesaAtual").textContent = mesas[indiceMesa];
+
+      mesas.forEach((_, i) => {
+        const btn = document.getElementById("mesaBtn-" + i);
+        if (!btn) return;
+        if (i === indiceMesa) {
+          btn.classList.add("ativa");
+        } else {
+          btn.classList.remove("ativa");
+        }
+      });
+
+      if (!comandas[mesaAtual]) {
+        comandas[mesaAtual] = [];
+      }
+      renderizarComanda();
+      atualizarEstadoMesas();
+    }
+
+    // --------------------------
+    // COMANDA (ABA COMANDAS)
+    // --------------------------
+    function renderizarComanda() {
+      const tbody = document.getElementById("tbodyItens");
+      tbody.innerHTML = "";
+      if (mesaAtual === null) {
+        document.getElementById("totalComanda").textContent = "R$ 0,00";
+        document.getElementById("infoTroco").textContent = "";
+        return;
+      }
+
+      const itens = comandas[mesaAtual] || [];
+      let total = 0;
+
+      itens.forEach((item, index) => {
+        const tr = document.createElement("tr");
+
+        const tdProduto = document.createElement("td");
+        tdProduto.textContent = item.produto;
+        tr.appendChild(tdProduto);
+
+        const tdQtd = document.createElement("td");
+        tdQtd.textContent = item.quantidade;
+        tr.appendChild(tdQtd);
+
+        const tdPreco = document.createElement("td");
+        tdPreco.textContent = formatarValor(item.preco);
+        tr.appendChild(tdPreco);
+
+        const subtotal = item.preco * item.quantidade;
+        total += subtotal;
+        const tdSubtotal = document.createElement("td");
+        tdSubtotal.textContent = formatarValor(subtotal);
+        tr.appendChild(tdSubtotal);
+
+        const tdAcoes = document.createElement("td");
+
+        const btnMais = document.createElement("button");
+        btnMais.className = "btn-pequeno btn-mais";
+        btnMais.textContent = "+";
+        btnMais.onclick = () => alterarQuantidade(index, 1);
+        tdAcoes.appendChild(btnMais);
+
+        const btnMenos = document.createElement("button");
+        btnMenos.className = "btn-pequeno btn-menos";
+        btnMenos.textContent = "-";
+        btnMenos.onclick = () => alterarQuantidade(index, -1);
+        tdAcoes.appendChild(btnMenos);
+
+        const btnRemover = document.createElement("button");
+        btnRemover.className = "btn-pequeno btn-remover";
+        btnRemover.textContent = "X";
+        btnRemover.onclick = () => removerItem(index);
+        tdAcoes.appendChild(btnRemover);
+
+        tr.appendChild(tdAcoes);
+
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById("totalComanda").textContent = formatarValor(total);
+      document.getElementById("infoTroco").textContent = "";
+      atualizarEstadoMesas();
+    }
+
+    function adicionarItem() {
+      if (mesaAtual === null) {
+        alert("Selecione uma mesa antes de adicionar itens.");
+        return;
+      }
+
+      const select = document.getElementById("produtoSelect");
+      const produto = select.value;
+      const preco = parseFloat(select.selectedOptions[0].dataset.preco || "0");
+      const qtdInput = document.getElementById("qtdInput");
+      let quantidade = parseInt(qtdInput.value, 10);
+
+      if (!quantidade || quantidade <= 0) {
+        quantidade = 1;
+        qtdInput.value = 1;
+      }
+
+      if (!comandas[mesaAtual]) {
+        comandas[mesaAtual] = [];
+      }
+
+      const itens = comandas[mesaAtual];
+      const existente = itens.find((i) => i.produto === produto && i.preco === preco);
+      if (existente) {
+        existente.quantidade += quantidade;
+      } else {
+        itens.push({ produto, preco, quantidade });
+      }
+
+      salvarEstado();
+      renderizarComanda();
+    }
+
+    function alterarQuantidade(index, delta) {
+      if (mesaAtual === null) return;
+      const itens = comandas[mesaAtual];
+      if (!itens || !itens[index]) return;
+
+      itens[index].quantidade += delta;
+      if (itens[index].quantidade <= 0) {
+        itens.splice(index, 1);
+      }
+
+      salvarEstado();
+      renderizarComanda();
+    }
+
+    function removerItem(index) {
+      if (mesaAtual === null) return;
+      const itens = comandas[mesaAtual];
+      if (!itens || !itens[index]) return;
+
+      itens.splice(index, 1);
+      salvarEstado();
+      renderizarComanda();
+    }
+
+    function limparComanda() {
+      if (mesaAtual === null) {
+        alert("Nenhuma mesa selecionada.");
+        return;
+      }
+      if (!confirm("Tem certeza que deseja limpar toda a comanda desta mesa?")) {
+        return;
+      }
+      comandas[mesaAtual] = [];
+      salvarEstado();
+      renderizarComanda();
+      document.getElementById("valorRecebido").value = "";
+      document.getElementById("formaPagamento").value = "";
+    }
+
+    function fecharConta() {
+      if (mesaAtual === null) {
+        alert("Nenhuma mesa selecionada.");
+        return;
+      }
+
+      const itens = comandas[mesaAtual] || [];
+      if (itens.length === 0) {
+        alert("Esta comanda está vazia.");
+        return;
+      }
+
+      let total = 0;
+      itens.forEach((item) => {
+        total += item.preco * item.quantidade;
+      });
+
+      const valorRecebidoInput = document.getElementById("valorRecebido");
+      const valorRecebido = parseFloat(
+        (valorRecebidoInput.value || "").toString().replace(",", ".")
+      );
+
+      if (isNaN(valorRecebido)) {
+        alert("Digite o valor recebido para calcular o troco.");
+        return;
+      }
+
+      const formaPagamentoSelect = document.getElementById("formaPagamento");
+      const formaPagamento = formaPagamentoSelect.value;
+      if (!formaPagamento) {
+        alert("Selecione a forma de pagamento.");
+        return;
+      }
+
+      if (valorRecebido < total && formaPagamento === "Dinheiro") {
+        alert(
+          "Valor recebido em dinheiro é menor que o total.\nTotal: " +
+            formatarValor(total) +
+            "\nRecebido: " +
+            formatarValor(valorRecebido)
+        );
+        return;
+      }
+
+      const troco =
+        formaPagamento === "Dinheiro" ? valorRecebido - total : 0;
+
+      if (formaPagamento === "Dinheiro") {
+        document.getElementById("infoTroco").textContent =
+          "Troco: " + formatarValor(troco);
+      } else {
+        document.getElementById("infoTroco").textContent =
+          "Pagamento em " + formaPagamento + ".";
+      }
+
+      const resumo = itens
+        .map(
+          (item) =>
+            `${item.quantidade}x ${item.produto} = ${formatarValor(
+              item.preco * item.quantidade
+            )}`
+        )
+        .join("\n");
+
+      const mensagem =
+        "Mesa: " +
+        mesas[mesaAtual] +
+        "\nForma de pagamento: " +
+        formaPagamento +
+        "\n\n" +
+        resumo +
+        "\n\nTotal: " +
+        formatarValor(total) +
+        (formaPagamento === "Dinheiro"
+          ? "\nRecebido: " +
+            formatarValor(valorRecebido) +
+            "\nTroco: " +
+            formatarValor(troco)
+          : "");
+
+      const venda = {
+        mesa: mesas[mesaAtual],
+        itens: itens.map((i) => ({ ...i })),
+        total,
+        recebido: valorRecebido,
+        troco,
+        formaPagamento,
+        dataHora: new Date().toLocaleString("pt-BR")
+      };
+      historicoVendas.push(venda);
+      salvarHistorico();
+
+      if (
+        confirm(
+          "Conta fechada!\n\n" +
+            mensagem +
+            "\n\nDeseja limpar a comanda desta mesa para o próximo cliente?"
+        )
+      ) {
+        comandas[mesaAtual] = [];
+        salvarEstado();
+        renderizarComanda();
+        valorRecebidoInput.value = "";
+        formaPagamentoSelect.value = "";
+        document.getElementById("infoTroco").textContent = "";
+      } else {
+        atualizarEstadoMesas();
+      }
+    }
+
+    // --------------------------
+    // RELATÓRIO (ABA RELATÓRIO)
+    // --------------------------
+    function atualizarRelatorio() {
+      const totalVendasSpan = document.getElementById("relTotalVendido");
+      const qtdVendasSpan = document.getElementById("relQtdVendas");
+      const corpoMesa = document.getElementById("relPorMesa");
+      const corpoProd = document.getElementById("relPorProduto");
+      const corpoLista = document.getElementById("relListaVendas");
+
+      let totalGeral = 0;
+      const mapaMesa = {};   // mesa -> total
+      const mapaProduto = {}; // produto -> { qtd, total }
+
+      historicoVendas.forEach((venda) => {
+        totalGeral += venda.total;
+
+        if (!mapaMesa[venda.mesa]) mapaMesa[venda.mesa] = 0;
+        mapaMesa[venda.mesa] += venda.total;
+
+        venda.itens.forEach((item) => {
+          if (!mapaProduto[item.produto]) {
+            mapaProduto[item.produto] = { qtd: 0, total: 0 };
+          }
+          mapaProduto[item.produto].qtd += item.quantidade;
+          mapaProduto[item.produto].total += item.preco * item.quantidade;
+        });
+      });
+
+      totalVendasSpan.textContent = formatarValor(totalGeral);
+      qtdVendasSpan.textContent = historicoVendas.length.toString();
+
+      corpoMesa.innerHTML = "";
+      Object.keys(mapaMesa).forEach((mesa) => {
+        const tr = document.createElement("tr");
+        const tdMesa = document.createElement("td");
+        tdMesa.textContent = mesa;
+        const tdTotal = document.createElement("td");
+        tdTotal.textContent = formatarValor(mapaMesa[mesa]);
+        tr.appendChild(tdMesa);
+        tr.appendChild(tdTotal);
+        corpoMesa.appendChild(tr);
+      });
+
+      corpoProd.innerHTML = "";
+      Object.keys(mapaProduto).forEach((prod) => {
+        const info = mapaProduto[prod];
+        const tr = document.createElement("tr");
+        const tdProd = document.createElement("td");
+        tdProd.textContent = prod;
+        const tdQtd = document.createElement("td");
+        tdQtd.textContent = info.qtd;
+        const tdTotal = document.createElement("td");
+        tdTotal.textContent = formatarValor(info.total);
+        tr.appendChild(tdProd);
+        tr.appendChild(tdQtd);
+        tr.appendChild(tdTotal);
+        corpoProd.appendChild(tr);
+      });
+
+      corpoLista.innerHTML = "";
+      historicoVendas.forEach((venda) => {
+        const tr = document.createElement("tr");
+
+        const tdData = document.createElement("td");
+        tdData.textContent = venda.dataHora;
+        const tdMesa = document.createElement("td");
+        tdMesa.textContent = venda.mesa;
+        const tdTotal = document.createElement("td");
+        tdTotal.textContent = formatarValor(venda.total);
+
+        const tdPagamento = document.createElement("td");
+        tdPagamento.textContent = venda.formaPagamento || "N/I";
+
+        const tdItens = document.createElement("td");
+        tdItens.style.textAlign = "left";
+        tdItens.style.fontSize = "0.75rem";
+        tdItens.textContent = venda.itens
+          .map(
+            (item) =>
+              `${item.quantidade}x ${item.produto} (${formatarValor(
+                item.preco * item.quantidade
+              )})`
+          )
+          .join(" | ");
+
+        tr.appendChild(tdData);
+        tr.appendChild(tdMesa);
+        tr.appendChild(tdTotal);
+        tr.appendChild(tdPagamento);
+        tr.appendChild(tdItens);
+
+        corpoLista.appendChild(tr);
+      });
+    }
+
+    function limparHistorico() {
+      if (
+        !confirm(
+          "Tem certeza que deseja apagar TODO o histórico de vendas?\nAs comandas em aberto NÃO serão alteradas."
+        )
+      ) {
+        return;
+      }
+      historicoVendas = [];
+      salvarHistorico();
+      atualizarRelatorio();
+    }
+
+    // --------------------------
+    // INICIALIZAÇÃO
+    // --------------------------
+    window.onload = function () {
+      carregarEstado();
+      montarListaMesas();
+      if (mesas.length > 0) {
+        selecionarMesa(0);
+      }
+    };
+  </script>
+</body>
+</html>
